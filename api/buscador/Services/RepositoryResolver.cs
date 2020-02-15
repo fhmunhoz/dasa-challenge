@@ -1,5 +1,6 @@
 using buscador.Interfaces;
 using System;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace buscador.Services
 {
@@ -14,13 +15,13 @@ namespace buscador.Services
     public IScraperSite RetornaScraperPorNome(string name)
     {
          if(name == "posthaus") {
-            return (IScraperSite)_serviceProvider.GetService(typeof(ScraperSitePostHaus)) ;
+            return _serviceProvider.GetService<ScraperSitePostHaus>();
          }                    
          else if(name == "distritomoda") {
-            return (IScraperSite)_serviceProvider.GetService(typeof(ScraperSiteDistritoModa)) ;
+            return _serviceProvider.GetService<ScraperSiteDistritoModa>() ;
          } 
          else if(name == "vkmodas") {
-            return (IScraperSite)_serviceProvider.GetService(typeof(ScraperSiteVkModas)) ;
+            return _serviceProvider.GetService<ScraperSiteVkModas>() ;
          } 
          else{
              throw new NotImplementedException(string.Format("Serviço {0} não encontrado", name));

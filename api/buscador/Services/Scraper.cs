@@ -19,20 +19,25 @@ namespace buscador.Services
 
         private readonly ScraperDbContext _context;        
         private readonly IOptions<List<TemplateBusca>> _templates;
-        //private readonly IRepositoryResolver _scraperRepository;     
-        private readonly IScraperSite _scraperPostHaus;   
-        private readonly IRoupas _roupa;
+        //private readonly IScraperFactory _scraperRepository;     
+        private readonly IScraperSite _scraperVKModas;   
+        private readonly IBusca _roupa;
+          private readonly ILogger _logger;
         public Scraper(ScraperDbContext context,                        
-                        IOptions<List<TemplateBusca>> templates,
+                        IOptions<List<TemplateBusca>> templates,                        
+                        IBusca roupa,
+                        IScraperFactory scraperRepository,
                         IScraperSite scraperPostHaus,
-                        IRoupas roupa
+                        ILogger<Scraper> logger
                         )
         {
             _context = context;            
-            _templates = templates;
-            _scraperPostHaus = scraperPostHaus;
+            _templates = templates;            
             _roupa = roupa;
+            _logger = logger;
             //_scraperRepository = scraperRepository;            
+
+            _scraperVKModas = scraperPostHaus;
         }
 
         public async Task ExtrairDadosSites()
@@ -47,9 +52,19 @@ namespace buscador.Services
                     continue;
                 }
 
-                //var scrapService = _scraperRepository.GetRepositoryByName(busca.Nome);
-                IEnumerable<ResultadoBusca> resultados = new List<ResultadoBusca>();                
-                resultados = await _scraperPostHaus.ExtraiDadosPagina(busca);
+                try{
+                    //var scrapService = _scraperRepository.RetornaScraperPorNome(busca.Nome);
+                    IEnumerable<ResultadoBusca> resultados = new List<ResultadoBusca>();                
+                    resultados = await _scraperVKModas.ExtraiDadosPagina(busca);
+                }
+                catch(System.Exception ex){
+
+                    var nomeSite = busca.Nome;
+                    var msgErro = ex.Message;
+                    _logger.LogError("Ocorreu um erro ao importar os dados do site {nomeSite}. Erro: {msgErro}",nomeSite, msgErro);                    
+
+                }
+                
                 
             }
 

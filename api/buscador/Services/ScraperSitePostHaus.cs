@@ -22,10 +22,10 @@ namespace buscador.Services
         private TemplateBusca _template { get; set; }
         private IBrowsingContext _browsingContext { get; set; }
         private readonly ILogger _logger;
-        private readonly IRoupas _roupa;
+        private readonly IBusca _roupa;
 
         public ScraperSitePostHaus(ILogger<ScraperSitePostHaus> logger,
-        IRoupas roupa)
+        IBusca roupa)
         {
             _logger = logger;
             _roupa = roupa;
@@ -131,7 +131,7 @@ namespace buscador.Services
                     roupa.Origem = _template.Nome;
                     roupa.UrlProduto = urlProduto;
                     roupa.Nome = nomeProduto;
-                    roupa.Descricao = paginaProduto.QuerySelector(_template.SeletorDescricao).InnerHtml;
+                    roupa.Descricao = paginaProduto.QuerySelector(_template.SeletorDescricao).GetAttribute("content");
                     roupa.Categoria = nomeCategoria;
                     roupa.UrlImagem = paginaProduto.QuerySelector(_template.SeletorUrlImagem).GetAttribute("content");
                     roupa.Preco = TratamentoPreco(paginaProduto.QuerySelector(_template.SeletorPreco).InnerHtml);
@@ -178,6 +178,7 @@ namespace buscador.Services
 
             //Encontras as TAGS com a url para a o grid de produtos por categoria
             var categorias = gridProdutos.QuerySelectorAll(_template.SeletorMenuCategorias);
+            var buscaId = 0;
 
             foreach (var categoria in categorias)
             {
@@ -188,9 +189,9 @@ namespace buscador.Services
                 //dentro da página de detalhes do produto, 
                 //padrão semelhante foi visto nos outros 3 sites
                 var nomeCategoria = categoria.QuerySelector(_template.SelectorCategoria).InnerHtml;
-
+                
                 await ExtrairDadosPorCategoria(urlGridCategoria, nomeCategoria, resultados);
-                await _roupa.PersistirBusca(resultados);
+                buscaId = await _roupa.PersistirBusca(buscaId, resultados);
                 resultados.Clear();
             }
 

@@ -44,18 +44,11 @@ namespace buscador.Data
         [Column(TypeName = "text")]
         public string Categoria { get; set; }
         
-        [Required()]        
-        [StringLength(25)]
-        [Column(TypeName = "text")]
-        public string Origem { get; set; }
-
-        [Required()]     
-        [Column(TypeName = "text")]   
-        [DataType(DataType.Date)]
-        public DateTime DataBusca {get;set;}
-
         [ForeignKey("RoupaId")]
         public ICollection<RoupasTamanho> Tamanhos { get; set; }
+
+        [Required()]
+        public int BuscaId { get; set; }
 
     }
 
