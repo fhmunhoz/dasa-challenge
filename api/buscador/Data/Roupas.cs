@@ -54,7 +54,7 @@ namespace buscador.Data
         [DataType(DataType.Date)]
         public DateTime DataBusca {get;set;}
 
-        [ForeignKey("RoupasTamanhoFK")]
+        [ForeignKey("RoupaId")]
         public ICollection<RoupasTamanho> Tamanhos { get; set; }
 
     }

@@ -27,7 +27,7 @@ namespace buscador.Controllers
             try
             {
                  await _scraper.ExtrairDadosSites();
-                return Ok();
+                return Ok("Dados de roupas exportadasl");
             }
             catch (Exception ex)
             {

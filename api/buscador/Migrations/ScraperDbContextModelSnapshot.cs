@@ -69,13 +69,7 @@ namespace buscador.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("RoupaFK")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("RoupaId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("RoupasTamanhoFK")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Tamanho")
@@ -85,22 +79,18 @@ namespace buscador.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoupaFK");
-
-                    b.HasIndex("RoupasTamanhoFK");
+                    b.HasIndex("RoupaId");
 
                     b.ToTable("RoupasTamanho");
                 });
 
             modelBuilder.Entity("buscador.Data.RoupasTamanho", b =>
                 {
-                    b.HasOne("buscador.Data.Roupas", "Roupa")
-                        .WithMany()
-                        .HasForeignKey("RoupaFK");
-
                     b.HasOne("buscador.Data.Roupas", null)
                         .WithMany("Tamanhos")
-                        .HasForeignKey("RoupasTamanhoFK");
+                        .HasForeignKey("RoupaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

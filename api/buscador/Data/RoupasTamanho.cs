@@ -19,9 +19,6 @@ namespace buscador.Data
         [Column(TypeName = "text")]
         public string Tamanho { get; set; }
 
-        [ForeignKey("RoupaFK")]        
-        public Roupas Roupa { get; set; }
-
     }
 
 }

@@ -8,10 +8,10 @@ namespace buscador.Models
         public string Nome { get; set; }
         public string Descricao { get; set; }
         public decimal Preco { get; set; }        
-        public decimal UrlProduto { get; set; }        
-        public decimal UrlImagem { get; set; }        
-        public decimal Categoria { get; set; }
-        public IEnumerable<string> Tamanhos {get;set;}
+        public string UrlProduto { get; set; }        
+        public string UrlImagem { get; set; }        
+        public string Categoria { get; set; }
+        public List<string> Tamanhos {get;set;}
 
     }
 
