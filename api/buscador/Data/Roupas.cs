@@ -11,7 +11,7 @@ namespace buscador.Data
     public class Roupas
     {
 
-        [Key]        
+        [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
@@ -25,25 +25,25 @@ namespace buscador.Data
         [Column(TypeName = "text")]
         public string Descricao { get; set; }
 
-        [Required()]        
+        [Required()]
         [Column(TypeName = "real")]
         public decimal Preco { get; set; }
 
-        [Required()]        
+        [Required()]
         [StringLength(255)]
         [Column(TypeName = "text")]
         public string UrlProduto { get; set; }
 
-        [Required()]        
+        [Required()]
         [StringLength(255)]
         [Column(TypeName = "text")]
         public string UrlImagem { get; set; }
 
-        [Required()]        
+        [Required()]
         [StringLength(50)]
         [Column(TypeName = "text")]
         public string Categoria { get; set; }
-        
+
         [ForeignKey("RoupaId")]
         public ICollection<RoupasTamanho> Tamanhos { get; set; }
 

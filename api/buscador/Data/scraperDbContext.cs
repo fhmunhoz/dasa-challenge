@@ -17,6 +17,7 @@ namespace buscador.Data
         public DbSet<Roupas> Roupas { get; set; }
         public DbSet<RoupasTamanho> RoupasTamanho { get; set; }
         public DbSet<RegistroBusca> RegistroBusca { get; set; }
+        public DbSet<BuscaConsolidada> BuscaConsolidada { get; set; }
 
     }
 }

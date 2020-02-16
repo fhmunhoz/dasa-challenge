@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using buscador.Services;
 using buscador.Interfaces;
 using buscador.Models;
+using buscador.Helpers;
 
 namespace buscador
 {
@@ -35,14 +36,14 @@ namespace buscador
             services.AddScoped<IBusca, Busca>();
             services.AddScoped<IScraperHelper, ScraperHelper>();
 
-            services.AddSingleton<IScraperFactory, ScraperFactory>();
+            services.AddScoped<IScraperFactory, ScraperFactory>();
 
-            //services.AddScoped<IScraperSite, ScraperSitePostHaus>();
-            //services.AddScoped<IScraperSite, ScraperSiteVkModas>();
-            services.AddScoped<IScraperSite, ScraperSiteDistritoModa>();
+            services.AddScoped<IScraperSitePosthaus, ScraperSitePostHaus>();
+            services.AddScoped<IScraperSiteVKModas, ScraperSiteVkModas>();
+            services.AddScoped<IScraperSiteDistritoModas, ScraperSiteDistritoModa>();
 
             services.Configure<List<TemplateBusca>>(Configuration.GetSection("ConfiguracoesBuscador:Sites"));
-        
+
             services.AddControllers();
 
         }
@@ -66,6 +67,8 @@ namespace buscador
                 var context = serviceScope.ServiceProvider.GetRequiredService<ScraperDbContext>();
                 context.Database.Migrate();
             }
+
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
             app.UseEndpoints(endpoints =>
             {

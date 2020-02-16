@@ -17,31 +17,31 @@ using System.Web;
 namespace buscador.Services
 {
 
-    public class ScraperSitePostHaus : IScraperSite
+    public class ScraperSitePostHaus : IScraperSitePosthaus
     {
         private TemplateBusca _template { get; set; }
         private IBrowsingContext _browsingContext { get; set; }
-        
+
         private readonly ILogger _logger;
-        private readonly IBusca _roupa;
+        private readonly IBusca _busca;
         private readonly IScraperHelper _helper;
 
         public ScraperSitePostHaus(ILogger<ScraperSitePostHaus> logger,
-                                        IBusca roupa,
+                                        IBusca busca,
                                         IScraperHelper helper)
         {
             _logger = logger;
-            _roupa = roupa;
+            _busca = busca;
             _helper = helper;
         }
-   
+
         private bool PossuiMaisPaginas(IDocument paginaCategoria)
         {
 
             var botoesPaginacao = paginaCategoria.QuerySelectorAll(_template.SeletorBotaoProximaPagina);
             IElement botaoProximaPagina = null;
 
-            if(botoesPaginacao.Length == 0) return false;
+            if (botoesPaginacao.Length == 0) return false;
 
             //Se o SPAN do botão de paginação for encontrado e seu texto contem
             //proximo, existe mais páginas
@@ -66,7 +66,7 @@ namespace buscador.Services
             return false;
 
         }
-    
+
         private async Task ExtrairDadosPorCategoria(string urlGridCategoria,
                                                     string nomeCategoria,
                                                     List<ResultadoBusca> resultados)
@@ -149,11 +149,13 @@ namespace buscador.Services
                 //dentro da página de detalhes do produto, 
                 //padrão semelhante foi visto nos outros 3 sites
                 var nomeCategoria = categoria.QuerySelector(_template.SelectorCategoria).InnerHtml.Trim();
-                
+
                 await ExtrairDadosPorCategoria(urlGridCategoria, nomeCategoria, resultados);
-                buscaId = await _roupa.PersistirBusca(buscaId, resultados);
+                buscaId = await _busca.PersistirBusca(buscaId, resultados);
                 resultados.Clear();
             }
+
+            await _busca.ConsolidarBusca(buscaId);
 
         }
 
@@ -161,7 +163,7 @@ namespace buscador.Services
         {
             _template = template;
             List<ResultadoBusca> resultado = new List<ResultadoBusca>();
-            await ExtrairDadosPagina(resultado);            
+            await ExtrairDadosPagina(resultado);
         }
 
     }

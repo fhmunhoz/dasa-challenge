@@ -16,20 +16,20 @@ using System.Web;
 
 namespace buscador.Services
 {
-    public class ScraperSiteVkModas : IScraperSite
+    public class ScraperSiteVkModas : IScraperSiteVKModas
     {
         private TemplateBusca _template { get; set; }
         private IBrowsingContext _browsingContext { get; set; }
         private readonly ILogger _logger;
-        private readonly IBusca _roupa;
+        private readonly IBusca _busca;
         private readonly IScraperHelper _helper;
 
         public ScraperSiteVkModas(ILogger<ScraperSitePostHaus> logger,
-                                        IBusca roupa,
+                                        IBusca busca,
                                         IScraperHelper helper)
         {
             _logger = logger;
-            _roupa = roupa;
+            _busca = busca;
             _helper = helper;
         }
 
@@ -41,7 +41,7 @@ namespace buscador.Services
             //Verifica se foi encontrado ao meno um botão de proxima página
             return botoesPaginacao.Length > 0;
         }
- 
+
         private async Task ExtrairDadosPorCategoria(string urlGridCategoria,
                                                     string nomeCategoria,
                                                     List<ResultadoBusca> resultados)
@@ -127,12 +127,14 @@ namespace buscador.Services
                 var nomeCategoria = categoria.InnerHtml;
 
                 //_logger.LogInformation("{nomeCategoria} - {InnerHtml}", urlGridCategoria, nomeCategoria);
-                
+
                 await ExtrairDadosPorCategoria(urlGridCategoria, nomeCategoria, resultados);
-                buscaId = await _roupa.PersistirBusca(buscaId, resultados);
+                buscaId = await _busca.PersistirBusca(buscaId, resultados);
                 resultados.Clear();
-                
+
             }
+
+            await _busca.ConsolidarBusca(buscaId);
 
         }
 
@@ -140,7 +142,7 @@ namespace buscador.Services
         {
             _template = template;
             List<ResultadoBusca> resultado = new List<ResultadoBusca>();
-            await ExtrairDadosPagina(resultado);            
+            await ExtrairDadosPagina(resultado);
         }
 
 

@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using System;
 using System.Web;
 
-namespace buscador.Services
+namespace buscador.Helpers
 {
 
     public class ScraperHelper : IScraperHelper

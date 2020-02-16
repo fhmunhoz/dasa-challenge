@@ -16,24 +16,24 @@ using System.Web;
 
 namespace buscador.Services
 {
-    public class ScraperSiteDistritoModa : IScraperSite
+    public class ScraperSiteDistritoModa : IScraperSiteDistritoModas
     {
         private TemplateBusca _template { get; set; }
         private IBrowsingContext _browsingContext { get; set; }
 
         private readonly ILogger _logger;
-        private readonly IBusca _roupa;
-        private readonly IScraperHelper _helper;        
+        private readonly IBusca _busca;
+        private readonly IScraperHelper _helper;
 
         public ScraperSiteDistritoModa(ILogger<ScraperSitePostHaus> logger,
-                                        IBusca roupa,
+                                        IBusca busca,
                                         IScraperHelper helper)
         {
             _logger = logger;
-            _roupa = roupa;
+            _busca = busca;
             _helper = helper;
         }
-    
+
         private bool PossuiMaisPaginas(IDocument paginaCategoria)
         {
 
@@ -41,11 +41,12 @@ namespace buscador.Services
 
             //Caso o botão de proxima pagina não seja encontrado ou HREF aponte para a propria página (#)
             //considera que não existe próxima página
-            if(botaoPaginacao == null || botaoPaginacao.GetAttribute("href") == "#"){
+            if (botaoPaginacao == null || botaoPaginacao.GetAttribute("href") == "#")
+            {
                 return false;
             }
-            
-            return true;            
+
+            return true;
         }
 
         private async Task ExtrairDadosPorCategoria(string urlGridCategoria,
@@ -73,7 +74,7 @@ namespace buscador.Services
                     roupa.UrlProduto = urlProduto;
                     roupa.Nome = nomeProduto;
                     roupa.Categoria = nomeCategoria;
-                    roupa.Descricao = paginaProduto.QuerySelector(_template.SeletorDescricao).GetAttribute("content");                    
+                    roupa.Descricao = paginaProduto.QuerySelector(_template.SeletorDescricao).GetAttribute("content");
                     roupa.UrlImagem = paginaProduto.QuerySelector(_template.SeletorUrlImagem).GetAttribute("content");
                     roupa.Preco = _helper.TratamentoPreco(paginaProduto.QuerySelector(_template.SeletorPreco).InnerHtml.Trim());
 
@@ -81,7 +82,7 @@ namespace buscador.Services
                     var elesTamanho = paginaProduto.QuerySelectorAll(_template.SeletorTamanhos);
                     foreach (var tamanho in elesTamanho)
                     {
-                        roupa.Tamanhos.Add(tamanho.InnerHtml.Trim());
+                        roupa.Tamanhos.Add(string.IsNullOrWhiteSpace(tamanho.InnerHtml) ? "" : tamanho.InnerHtml.Trim());
                     }
 
                     resultados.Add(roupa);
@@ -133,12 +134,14 @@ namespace buscador.Services
                 var nomeCategoria = categoria.GetAttribute("title");
 
                 //_logger.LogInformation("{nomeCategoria} - {InnerHtml}", urlGridCategoria, nomeCategoria);
-                
+
                 await ExtrairDadosPorCategoria(urlGridCategoria, nomeCategoria, resultados);
-                buscaId = await _roupa.PersistirBusca(buscaId, resultados);
+                buscaId = await _busca.PersistirBusca(buscaId, resultados);
                 resultados.Clear();
-                
+
             }
+
+            await _busca.ConsolidarBusca(buscaId);
 
         }
 
@@ -146,7 +149,7 @@ namespace buscador.Services
         {
             _template = template;
             List<ResultadoBusca> resultado = new List<ResultadoBusca>();
-            await ExtrairDadosPagina(resultado);            
+            await ExtrairDadosPagina(resultado);
         }
 
 

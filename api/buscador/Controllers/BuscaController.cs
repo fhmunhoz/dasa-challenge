@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using buscador.Interfaces; 
+using buscador.Interfaces;
 
 
 namespace buscador.Controllers
@@ -15,19 +15,37 @@ namespace buscador.Controllers
     public class BuscaController : ControllerBase
     {
         private readonly IScraper _scraper;
+        private readonly IBusca _busca;
 
-        public BuscaController(IScraper scraper)
-        {            
-            _scraper = scraper;
-        }
-        
-        [HttpGet]
-        public async Task<ActionResult> GetTeste()
+        public BuscaController(IScraper scraper,
+                                IBusca busca)
         {
+            _scraper = scraper;
+            _busca = busca;
+        }
+
+        [HttpGet("{termoBusca}/{paginaAtual:int}/{itensPorPagina:int}")]
+        public async Task<ActionResult> Getbusca(string termoBusca, int paginaAtual, int itensPorPagina)
+        {
+            if (string.IsNullOrWhiteSpace(termoBusca))
+                return BadRequest("Preencha algum termo de busca");
+            if (itensPorPagina <= 0)
+                return BadRequest("Itens por página deve ser maior do que zero");
+            if (paginaAtual <= 0)
+                return BadRequest("Pagina atual deve ser maior do que zero");
+
             try
             {
-                 await _scraper.ExtrairDadosSites();
-                return Ok("Dados de roupas exportadasl");
+                var retorno = await _busca.CompararProdutos(termoBusca, paginaAtual, itensPorPagina);
+
+                return Ok(new
+                {
+                    resultados = retorno,
+                    PaginaAtual = retorno.PaginaAtual,
+                    TotalPaginas = retorno.TotalPaginas,
+                    PossuiPaginaAnterior = retorno.PossuiPaginaAnterior,
+                    PossuiProximaPagina = retorno.PossuiProximaPagina
+                });
             }
             catch (Exception ex)
             {
