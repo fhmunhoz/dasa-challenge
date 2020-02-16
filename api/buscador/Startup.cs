@@ -33,11 +33,13 @@ namespace buscador
             services.AddDbContext<ScraperDbContext>(options => options.UseSqlite(Configuration.GetConnectionString("default")));
             services.AddScoped<IScraper, Scraper>();
             services.AddScoped<IBusca, Busca>();
+            services.AddScoped<IScraperHelper, ScraperHelper>();
 
             services.AddSingleton<IScraperFactory, ScraperFactory>();
+
             //services.AddScoped<IScraperSite, ScraperSitePostHaus>();
-            services.AddScoped<IScraperSite, ScraperSiteVkModas>();
-            //services.AddScoped<IScraperSite, ScraperSiteDistritoModa>();
+            //services.AddScoped<IScraperSite, ScraperSiteVkModas>();
+            services.AddScoped<IScraperSite, ScraperSiteDistritoModa>();
 
             services.Configure<List<TemplateBusca>>(Configuration.GetSection("ConfiguracoesBuscador:Sites"));
         

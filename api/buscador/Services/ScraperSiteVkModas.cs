@@ -22,29 +22,15 @@ namespace buscador.Services
         private IBrowsingContext _browsingContext { get; set; }
         private readonly ILogger _logger;
         private readonly IBusca _roupa;
+        private readonly IScraperHelper _helper;
 
         public ScraperSiteVkModas(ILogger<ScraperSitePostHaus> logger,
-        IBusca roupa)
+                                        IBusca roupa,
+                                        IScraperHelper helper)
         {
             _logger = logger;
             _roupa = roupa;
-        }
-
-        private decimal TratamentoPreco(string precoTexto)
-        {
-
-            //Utilizar regex para remover todos os caractres que não forem numeros ou ,
-            //preco = preco.Replace(',', '.');
-            var padraoPreco = @"[0-9\,\.]+";
-            var encontrouPreco = Regex.IsMatch(precoTexto, padraoPreco);
-
-            if (!encontrouPreco)
-                throw new IndexOutOfRangeException("Preço do produto não foi encontrado");
-
-            var precoFormatado = Regex.Match(precoTexto, padraoPreco).Value;
-            var preco = decimal.Parse(precoFormatado);
-            return preco;
-
+            _helper = helper;
         }
 
         private bool PossuiMaisPaginas(IDocument paginaCategoria)
@@ -55,34 +41,7 @@ namespace buscador.Services
             //Verifica se foi encontrado ao meno um botão de proxima página
             return botoesPaginacao.Length > 0;
         }
-
-        private string UrlProximaPagina(string urlPaginaAtual)
-        {
-
-            //página atual possui QS pag, se não 
-            //incluir a query ?pag=2
-            //se possui, descobre o valor da página
-            var urlProximaPagina = "";
-
-            var qsIndex = urlPaginaAtual.IndexOf("?");
-            if (qsIndex > 0)
-            {
-                var querystring = urlPaginaAtual.Substring(qsIndex + 1);
-                var qs = HttpUtility.ParseQueryString(querystring);
-                var indiceProximaPagina = Convert.ToInt32(qs.GetValues("page")[0]) + 1;
-                qs.Set("page", indiceProximaPagina.ToString());
-
-                urlProximaPagina = string.Format("{0}?{1}", urlPaginaAtual.Remove(qsIndex), qs.ToString());
-            }
-            else
-            {
-                urlProximaPagina = string.Format("{0}?page=2", urlPaginaAtual);
-            }
-
-            return urlProximaPagina;
-
-        }
-
+ 
         private async Task ExtrairDadosPorCategoria(string urlGridCategoria,
                                                     string nomeCategoria,
                                                     List<ResultadoBusca> resultados)
@@ -110,13 +69,13 @@ namespace buscador.Services
                     roupa.Descricao = paginaProduto.QuerySelector(_template.SeletorDescricao).GetAttribute("content");
                     roupa.Categoria = nomeCategoria;
                     roupa.UrlImagem = paginaProduto.QuerySelector(_template.SeletorUrlImagem).GetAttribute("content");
-                    roupa.Preco = TratamentoPreco(paginaProduto.QuerySelector(_template.SeletorPreco).InnerHtml);
+                    roupa.Preco = _helper.TratamentoPreco(paginaProduto.QuerySelector(_template.SeletorPreco).InnerHtml.Trim());
 
                     roupa.Tamanhos = new List<string>();
                     var elesTamanho = paginaProduto.QuerySelectorAll(_template.SeletorTamanhos);
                     foreach (var tamanho in elesTamanho)
                     {
-                        roupa.Tamanhos.Add(tamanho.InnerHtml);
+                        roupa.Tamanhos.Add(tamanho.InnerHtml.Trim());
                     }
 
                     resultados.Add(roupa);
@@ -135,7 +94,7 @@ namespace buscador.Services
 
             if (PossuiMaisPaginas(paginaCategoria))
             {
-                var urlProximaPagina = UrlProximaPagina(urlGridCategoria);
+                var urlProximaPagina = _helper.UrlProximaPagina(urlGridCategoria, _template.QueryStringPaginacao);
                 await ExtrairDadosPorCategoria(urlProximaPagina, nomeCategoria, resultados);
             }
 
@@ -177,12 +136,11 @@ namespace buscador.Services
 
         }
 
-        public async Task<IEnumerable<ResultadoBusca>> ExtraiDadosPagina(TemplateBusca template)
+        public async Task ProcessaDadosPagina(TemplateBusca template)
         {
             _template = template;
             List<ResultadoBusca> resultado = new List<ResultadoBusca>();
-            await ExtrairDadosPagina(resultado);
-            return resultado;
+            await ExtrairDadosPagina(resultado);            
         }
 
 

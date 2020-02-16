@@ -7,7 +7,7 @@ namespace buscador.Interfaces
 {
   
     public interface IScraperSite{
-        Task<IEnumerable<ResultadoBusca>> ExtraiDadosPagina(TemplateBusca template);
+        Task ProcessaDadosPagina(TemplateBusca template);
     }
 
 }

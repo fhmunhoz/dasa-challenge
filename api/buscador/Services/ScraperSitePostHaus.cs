@@ -21,33 +21,20 @@ namespace buscador.Services
     {
         private TemplateBusca _template { get; set; }
         private IBrowsingContext _browsingContext { get; set; }
+        
         private readonly ILogger _logger;
         private readonly IBusca _roupa;
+        private readonly IScraperHelper _helper;
 
         public ScraperSitePostHaus(ILogger<ScraperSitePostHaus> logger,
-        IBusca roupa)
+                                        IBusca roupa,
+                                        IScraperHelper helper)
         {
             _logger = logger;
             _roupa = roupa;
+            _helper = helper;
         }
-
-        private decimal TratamentoPreco(string precoTexto)
-        {
-
-            //Utilizar regex para remover todos os caractres que não forem numeros ou ,
-            //preco = preco.Replace(',', '.');
-            var padraoPreco = @"[0-9\,\.]+";
-            var encontrouPreco = Regex.IsMatch(precoTexto, padraoPreco);
-
-            if (!encontrouPreco)
-                throw new IndexOutOfRangeException("Preço do produto não foi encontrado");
-
-            var precoFormatado = Regex.Match(precoTexto, padraoPreco).Value;
-            var preco = decimal.Parse(precoFormatado);
-            return preco;
-
-        }
-
+   
         private bool PossuiMaisPaginas(IDocument paginaCategoria)
         {
 
@@ -79,34 +66,7 @@ namespace buscador.Services
             return false;
 
         }
-
-        private string UrlProximaPagina(string urlPaginaAtual)
-        {
-
-            //página atual possui QS pag, se não 
-            //incluir a query ?pag=2
-            //se possui, descobre o valor da página
-            var urlProximaPagina = "";
-
-            var qsIndex = urlPaginaAtual.IndexOf("?");
-            if (qsIndex > 0)
-            {
-                var querystring = urlPaginaAtual.Substring(qsIndex + 1);
-                var qs = HttpUtility.ParseQueryString(querystring);
-                var indiceProximaPagina = Convert.ToInt32(qs.GetValues("pag")[0]) + 1;
-                qs.Set("pag", indiceProximaPagina.ToString());
-
-                urlProximaPagina = string.Format("{0}?{1}", urlPaginaAtual.Remove(qsIndex), qs.ToString());
-            }
-            else
-            {
-                urlProximaPagina = string.Format("{0}?pag=2", urlPaginaAtual);
-            }
-
-            return urlProximaPagina;
-
-        }
-
+    
         private async Task ExtrairDadosPorCategoria(string urlGridCategoria,
                                                     string nomeCategoria,
                                                     List<ResultadoBusca> resultados)
@@ -125,7 +85,7 @@ namespace buscador.Services
                 {
 
                     var paginaProduto = await _browsingContext.OpenAsync(urlProduto);
-                    var nomeProduto = paginaProduto.QuerySelector(_template.SeletorNome).InnerHtml;
+                    var nomeProduto = paginaProduto.QuerySelector(_template.SeletorNome).InnerHtml.Trim();
 
                     var roupa = new ResultadoBusca();
                     roupa.Origem = _template.Nome;
@@ -134,13 +94,13 @@ namespace buscador.Services
                     roupa.Descricao = paginaProduto.QuerySelector(_template.SeletorDescricao).GetAttribute("content");
                     roupa.Categoria = nomeCategoria;
                     roupa.UrlImagem = paginaProduto.QuerySelector(_template.SeletorUrlImagem).GetAttribute("content");
-                    roupa.Preco = TratamentoPreco(paginaProduto.QuerySelector(_template.SeletorPreco).InnerHtml);
+                    roupa.Preco = _helper.TratamentoPreco(paginaProduto.QuerySelector(_template.SeletorPreco).InnerHtml.Trim());
 
                     roupa.Tamanhos = new List<string>();
                     var elesTamanho = paginaProduto.QuerySelectorAll(_template.SeletorTamanhos);
                     foreach (var tamanho in elesTamanho)
                     {
-                        roupa.Tamanhos.Add(tamanho.InnerHtml);
+                        roupa.Tamanhos.Add(tamanho.InnerHtml.Trim());
                     }
 
                     resultados.Add(roupa);
@@ -159,7 +119,7 @@ namespace buscador.Services
 
             if (PossuiMaisPaginas(paginaCategoria))
             {
-                var urlProximaPagina = UrlProximaPagina(urlGridCategoria);
+                var urlProximaPagina = _helper.UrlProximaPagina(urlGridCategoria, _template.QueryStringPaginacao);
                 await ExtrairDadosPorCategoria(urlProximaPagina, nomeCategoria, resultados);
             }
 
@@ -188,7 +148,7 @@ namespace buscador.Services
                 //Categoria está registrada no menu de grid de produtos, não foi encontrada 
                 //dentro da página de detalhes do produto, 
                 //padrão semelhante foi visto nos outros 3 sites
-                var nomeCategoria = categoria.QuerySelector(_template.SelectorCategoria).InnerHtml;
+                var nomeCategoria = categoria.QuerySelector(_template.SelectorCategoria).InnerHtml.Trim();
                 
                 await ExtrairDadosPorCategoria(urlGridCategoria, nomeCategoria, resultados);
                 buscaId = await _roupa.PersistirBusca(buscaId, resultados);
@@ -197,12 +157,11 @@ namespace buscador.Services
 
         }
 
-        public async Task<IEnumerable<ResultadoBusca>> ExtraiDadosPagina(TemplateBusca template)
+        public async Task ProcessaDadosPagina(TemplateBusca template)
         {
             _template = template;
             List<ResultadoBusca> resultado = new List<ResultadoBusca>();
-            await ExtrairDadosPagina(resultado);
-            return resultado;
+            await ExtrairDadosPagina(resultado);            
         }
 
     }

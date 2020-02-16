@@ -6,6 +6,7 @@ namespace buscador.Models
         public string Nome { get; set; }
         public string UrlSite { get; set; }
         public string UrlInicial { get; set; }
+        public string QueryStringPaginacao { get;set; }
         public string SeletorGridProdutos { get; set; }
         public string SeletorMenuCategorias { get; set; }
         public string SeletorLinkProduto { get; set; }

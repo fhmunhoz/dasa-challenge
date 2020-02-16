@@ -20,7 +20,7 @@ namespace buscador.Services
         private readonly ScraperDbContext _context;        
         private readonly IOptions<List<TemplateBusca>> _templates;
         //private readonly IScraperFactory _scraperRepository;     
-        private readonly IScraperSite _scraperVKModas;   
+        private readonly IScraperSite _scraperDistritoModas;   
         private readonly IBusca _roupa;
           private readonly ILogger _logger;
         public Scraper(ScraperDbContext context,                        
@@ -37,7 +37,7 @@ namespace buscador.Services
             _logger = logger;
             //_scraperRepository = scraperRepository;            
 
-            _scraperVKModas = scraperPostHaus;
+            _scraperDistritoModas = scraperPostHaus;
         }
 
         public async Task ExtrairDadosSites()
@@ -53,9 +53,8 @@ namespace buscador.Services
                 }
 
                 try{
-                    //var scrapService = _scraperRepository.RetornaScraperPorNome(busca.Nome);
-                    IEnumerable<ResultadoBusca> resultados = new List<ResultadoBusca>();                
-                    resultados = await _scraperVKModas.ExtraiDadosPagina(busca);
+                                        
+                    await _scraperDistritoModas.ProcessaDadosPagina(busca);
                 }
                 catch(System.Exception ex){
 
